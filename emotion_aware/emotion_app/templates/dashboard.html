@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container mt-5">
+
+    <h2 class="text-center mb-4">Emotion Analysis Dashboard</h2>
+
+    <!-- Emotion Chart -->
+    <div class="card mb-4 shadow">
+        <div class="card-body">
+            <h5 class="card-title text-center">Emotion Distribution</h5>
+            <canvas id="emotionChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Results Table -->
+    <div class="card shadow">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Prediction History</h5>
+
+            <table class="table table-bordered table-hover text-center align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Image</th>
+                        <th>Emotion</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                    <tr>
+                        <td>
+                            {% if result.image and result.image.url %}
+                                <img src="{{ result.image.url }}" width="80" height="80"
+                                     style="object-fit:cover; border-radius:8px;">
+                            {% else %}
+                                <span class="text-muted">Webcam</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <span class="badge bg-primary">
+                                {{ result.emotion }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {{ result.created_at|date:"d M Y, H:i" }}
+                        </td>
+                    </tr>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-muted">
+                            No predictions yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const labels = {{ labels|safe }};
+    const data = {{ data|safe }};
+
+    const ctx = document.getElementById('emotionChart').getContext('2d');
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Emotion Count',
+                data: data,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+</script>
+
+{% endblock %}
