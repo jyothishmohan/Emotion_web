@@ -1,47 +1,97 @@
-<!-- Add this in your dashboard template -->
+{% extends 'base.html' %}
 
-<div class="row mt-4">
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5>Total Predictions</h5>
-                <h2>{{ total_predictions }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5>Face Predictions</h5>
-                <h2>{{ face_predictions }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5>Text Predictions</h5>
-                <h2>{{ text_predictions }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5>Multimodal</h5>
-                <h2>{{ multimodal_predictions }}</h2>
-            </div>
-        </div>
-    </div>
-</div>
+{% block content %}
 
-<!-- Prediction Type Chart -->
-<div class="mt-4">
-    <canvas id="typeChart"></canvas>
+<!-- Bootstrap CSS (if not already in base.html) -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Emotion Dashboard</h2>
+
+    <!-- ============================= -->
+    <!-- STATISTICS CARDS -->
+    <!-- ============================= -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <h6>Total Predictions</h6>
+                    <h2>{{ total_predictions }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <h6>Face Predictions</h6>
+                    <h2>{{ face_predictions }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <h6>Text Predictions</h6>
+                    <h2>{{ text_predictions }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <h6>Multimodal</h6>
+                    <h2>{{ multimodal_predictions }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================= -->
+    <!-- EMOTION DISTRIBUTION CHART -->
+    <!-- ============================= -->
+    <div class="row mt-5">
+        <div class="col-md-6">
+            <canvas id="emotionChart"></canvas>
+        </div>
+
+        <div class="col-md-6">
+            <canvas id="typeChart"></canvas>
+        </div>
+    </div>
+
 </div>
 
 <script>
-    // Add to your existing Chart.js code
+    // Emotion Distribution Chart
+    new Chart(document.getElementById('emotionChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ labels|safe }},
+            datasets: [{
+                label: 'Emotion Count',
+                data: {{ data|safe }},
+                backgroundColor: '#667eea'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Emotion Distribution'
+                }
+            }
+        }
+    });
+
+    // Prediction Type Pie Chart
     new Chart(document.getElementById('typeChart'), {
         type: 'pie',
         data: {
@@ -62,3 +112,5 @@
         }
     });
 </script>
+
+{% endblock %}
