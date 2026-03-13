@@ -18,4 +18,5 @@ urlpatterns = [
     path('chatbot_message/', views.chatbot_message, name='chatbot_message'),
     path('chatbot/', views.chatbot_page, name='chatbot'),
     path('chatbot/message/', views.chatbot_free, name='chatbot_free'),
+    path('live-emotion/', views.live_emotion, name='live_emotion'),
 ]

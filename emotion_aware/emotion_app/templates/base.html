@@ -256,6 +256,12 @@
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'multimodal_predict' %}active{% endif %}" href="{% url 'multimodal_predict' %}">Multimodal</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'chatbot' %}active{% endif %}" href="{% url 'chatbot' %}" style="color: rgba(180,170,255,0.85) !important; display:flex; align-items:center; gap:6px;">
+                            <span style="width:6px;height:6px;border-radius:50%;background:#7c6fff;box-shadow:0 0 6px #7c6fff;display:inline-block;animation:pulse-dot 2s ease-in-out infinite;"></span>
+                            Chat
+                        </a>
+                    </li>
                 {% endif %}
             </ul>
 

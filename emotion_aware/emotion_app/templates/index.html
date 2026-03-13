@@ -253,6 +253,188 @@
         background: linear-gradient(90deg, #4ade80, #22d3ee);
         transition: width 1s ease;
     }
+    /* ── LIVE STREAM TAB ── */
+    #section-stream { display: none; }
+    #section-stream.active { display: block; }
+
+    .stream-layout {
+        display: grid;
+        grid-template-columns: 1fr 280px;
+        gap: 20px;
+        align-items: start;
+    }
+
+    @media (max-width: 700px) {
+        .stream-layout { grid-template-columns: 1fr; }
+    }
+
+    .stream-video-wrap {
+        position: relative;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #000;
+        aspect-ratio: 4/3;
+    }
+
+    #streamVideo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .stream-overlay {
+        position: absolute;
+        bottom: 14px;
+        left: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .live-badge {
+        font-family: 'Syne', sans-serif;
+        font-size: 28px;
+        font-weight: 800;
+        color: white;
+        text-shadow: 0 2px 12px rgba(0,0,0,0.8);
+        letter-spacing: -0.5px;
+        line-height: 1;
+        transition: all 0.25s ease;
+    }
+
+    .live-conf {
+        font-size: 13px;
+        font-weight: 500;
+        color: rgba(255,255,255,0.65);
+        text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+    }
+
+    .stream-status {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(0,0,0,0.55);
+        backdrop-filter: blur(6px);
+        border-radius: 99px;
+        padding: 5px 12px;
+        font-size: 11px;
+        font-weight: 500;
+        color: rgba(255,255,255,0.7);
+    }
+
+    .stream-status-dot {
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.3);
+        transition: background 0.3s;
+    }
+
+    .stream-status-dot.live {
+        background: #f87171;
+        animation: blink 1.2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+    }
+
+    /* Controls sidebar */
+    .stream-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .btn-start-stream {
+        width: 100%;
+        padding: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        font-family: 'DM Sans', sans-serif;
+        border-radius: 11px;
+        border: none;
+        background: rgba(74,222,128,0.15);
+        color: #86efac;
+        border: 1px solid rgba(74,222,128,0.25);
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .btn-start-stream:hover { background: rgba(74,222,128,0.25); }
+    .btn-start-stream:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-stop-stream {
+        width: 100%;
+        padding: 10px;
+        font-size: 13px;
+        font-weight: 500;
+        font-family: 'DM Sans', sans-serif;
+        border-radius: 11px;
+        border: 1px solid rgba(248,113,113,0.25);
+        background: rgba(248,113,113,0.08);
+        color: #fca5a5;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .btn-stop-stream:hover { background: rgba(248,113,113,0.15); }
+    .btn-stop-stream:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .stream-info {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--brand-border);
+        border-radius: 12px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .stream-info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+    }
+
+    .info-label { color: rgba(255,255,255,0.35); }
+    .info-value { color: #e8e6f0; font-weight: 500; }
+    .info-value.accent { color: #b4aaff; }
+
+    /* Emotion history pills */
+    .emotion-history {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .history-pill {
+        font-size: 11px;
+        padding: 3px 10px;
+        border-radius: 99px;
+        background: rgba(124,111,255,0.1);
+        border: 1px solid rgba(124,111,255,0.2);
+        color: rgba(180,170,255,0.7);
+        animation: pop-in 0.2s ease;
+    }
+
+    @keyframes pop-in {
+        from { opacity: 0; transform: scale(0.8); }
+        to   { opacity: 1; transform: scale(1); }
+    }
 </style>
 {% endblock %}
 
@@ -269,7 +451,11 @@
     <!-- Tab switcher -->
     <div class="input-tabs">
         <button type="button" class="tab-btn active" onclick="switchTab('upload', this)">Upload Image</button>
-        <button type="button" class="tab-btn" onclick="switchTab('camera', this)">Live Camera</button>
+        <button type="button" class="tab-btn" onclick="switchTab('camera', this)">Capture Photo</button>
+        <button type="button" class="tab-btn" onclick="switchTab('stream', this)">
+            <span id="streamDot" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff6b9d;margin-right:6px;vertical-align:middle;"></span>
+            Live Stream
+        </button>
     </div>
 
     <div class="detect-panel">
@@ -309,12 +495,65 @@
         </div>
 
         <!-- Submit -->
-        <button type="submit" class="btn-predict">
+        <button type="submit" class="btn-predict" id="submitBtn">
             <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
             </svg>
             Analyse Emotion
         </button>
+
+        <!-- Live Stream section (outside form submit flow) -->
+        <div class="panel-section" id="section-stream">
+            <div class="stream-layout">
+                <div class="stream-video-wrap">
+                    <video id="streamVideo" autoplay playsinline muted></video>
+                    <canvas id="streamCanvas" style="display:none;"></canvas>
+                    <!-- Overlay badge -->
+                    <div class="stream-overlay" id="streamOverlay">
+                        <span id="liveEmotionBadge" class="live-badge">—</span>
+                        <span id="liveConfBadge" class="live-conf">—</span>
+                    </div>
+                    <div class="stream-status" id="streamStatus">
+                        <span class="stream-status-dot" id="streamStatusDot"></span>
+                        <span id="streamStatusText">Stopped</span>
+                    </div>
+                </div>
+                <div class="stream-controls">
+                    <button type="button" class="btn-start-stream" id="btnStartStream" onclick="startLiveStream()">
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16" fill="currentColor" stroke="none"/>
+                        </svg>
+                        Start Live Detection
+                    </button>
+                    <button type="button" class="btn-stop-stream" id="btnStopStream" onclick="stopLiveStream()" disabled>
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/><rect x="9" y="9" width="6" height="6" fill="currentColor" stroke="none"/>
+                        </svg>
+                        Stop
+                    </button>
+                    <div class="stream-info">
+                        <div class="stream-info-row">
+                            <span class="info-label">Current emotion</span>
+                            <span class="info-value accent" id="infoEmotion">—</span>
+                        </div>
+                        <div class="stream-info-row">
+                            <span class="info-label">Confidence</span>
+                            <span class="info-value" id="infoConf">—</span>
+                        </div>
+                        <div class="stream-info-row">
+                            <span class="info-label">Frames analysed</span>
+                            <span class="info-value" id="infoFrames">0</span>
+                        </div>
+                        <div class="stream-info-row">
+                            <span class="info-label">Faces found</span>
+                            <span class="info-value" id="infoFaces">—</span>
+                        </div>
+                    </div>
+                    <div class="emotion-history" id="emotionHistory"></div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </form>
 
@@ -345,7 +584,12 @@
         btn.classList.add('active');
         document.getElementById('section-' + tab).classList.add('active');
 
+        // Hide submit button on stream tab
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.style.display = (tab === 'stream') ? 'none' : 'flex';
+
         if (tab === 'camera') startCamera();
+        if (tab !== 'stream') stopLiveStream();
     }
 
     function startCamera() {
@@ -386,6 +630,113 @@
         const img = document.getElementById('upload-preview');
         img.src = URL.createObjectURL(file);
         img.style.display = 'block';
+    }
+
+    // ── LIVE STREAM ──────────────────────────────────────────
+    let streamInterval  = null;
+    let streamActive    = false;
+    let frameCount      = 0;
+    let streamCamStream = null;
+
+    async function startLiveStream() {
+        const video = document.getElementById('streamVideo');
+        try {
+            streamCamStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = streamCamStream;
+        } catch (err) {
+            alert('Camera access denied: ' + err.message);
+            return;
+        }
+
+        streamActive = true;
+        frameCount   = 0;
+        document.getElementById('btnStartStream').disabled = true;
+        document.getElementById('btnStopStream').disabled  = false;
+        document.getElementById('streamStatusDot').classList.add('live');
+        document.getElementById('streamStatusText').textContent = 'Live';
+
+        // Send a frame every 1 second
+        streamInterval = setInterval(sendFrame, 1000);
+    }
+
+    function stopLiveStream() {
+        streamActive = false;
+        clearInterval(streamInterval);
+        streamInterval = null;
+
+        if (streamCamStream) {
+            streamCamStream.getTracks().forEach(t => t.stop());
+            streamCamStream = null;
+        }
+
+        document.getElementById('btnStartStream').disabled = false;
+        document.getElementById('btnStopStream').disabled  = true;
+        document.getElementById('streamStatusDot').classList.remove('live');
+        document.getElementById('streamStatusText').textContent = 'Stopped';
+    }
+
+    async function sendFrame() {
+        if (!streamActive) return;
+
+        const video  = document.getElementById('streamVideo');
+        const canvas = document.getElementById('streamCanvas');
+
+        if (video.readyState < 2) return;
+
+        canvas.width  = video.videoWidth  || 640;
+        canvas.height = video.videoHeight || 480;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+
+        const frameData = canvas.toDataURL('image/jpeg', 0.7);
+
+        try {
+            const resp = await fetch("{% url 'live_emotion' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: JSON.stringify({ frame: frameData }),
+            });
+
+            const data = await resp.json();
+            if (data.error) return;
+
+            frameCount++;
+            updateStreamUI(data);
+
+        } catch (e) {
+            console.log('Frame error:', e);
+        }
+    }
+
+    function updateStreamUI(data) {
+        const emotion = data.emotion || '—';
+        const conf    = data.confidence ? data.confidence.toFixed(1) + '%' : '—';
+        const faces   = data.faces_found !== undefined ? data.faces_found : '—';
+
+        // Overlay on video
+        document.getElementById('liveEmotionBadge').textContent = emotion;
+        document.getElementById('liveConfBadge').textContent    = conf;
+
+        // Sidebar stats
+        document.getElementById('infoEmotion').textContent = emotion;
+        document.getElementById('infoConf').textContent    = conf;
+        document.getElementById('infoFrames').textContent  = frameCount;
+        document.getElementById('infoFaces').textContent   = faces;
+
+        // Emotion history pills (last 10)
+        const history = document.getElementById('emotionHistory');
+        if (emotion !== '—' && emotion !== 'No face') {
+            const pill = document.createElement('span');
+            pill.className   = 'history-pill';
+            pill.textContent = emotion;
+            history.insertBefore(pill, history.firstChild);
+            // Keep only 10
+            while (history.children.length > 10) {
+                history.removeChild(history.lastChild);
+            }
+        }
     }
 </script>
 {% endblock %}

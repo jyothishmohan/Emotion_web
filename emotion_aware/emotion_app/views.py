@@ -28,7 +28,7 @@ from django.core.files.base import ContentFile
 face_model = None
 text_predictor = None
 
-face_emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
+face_emotion_labels = ['Angry', 'Happy', 'Neutral', 'Sad', 'Surprise']
 
 
 def get_face_model():
@@ -477,98 +477,3 @@ def chatbot_message(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid request"}, status=400)
-
-# ======================================================
-# FREE CHATBOT PAGE + ENDPOINT
-# Add these two views to your views.py
-# ======================================================
-
-@login_required
-def chatbot_page(request):
-    """Renders the standalone chatbot page."""
-    return render(request, 'chatbot.html')
-
-
-@login_required
-def chatbot_free(request):
-    """
-    AJAX endpoint for the free chatbot.
-    Accepts POST JSON:
-      {
-        "message": "I feel anxious today",
-        "history": [{"role": "user", "content": "..."}, ...]
-      }
-    Returns:
-      {"emotion": "fear", "reply": "..."}
-    """
-    if request.method != "POST":
-        return JsonResponse({"error": "Invalid request"}, status=400)
-
-    try:
-        data         = json.loads(request.body)
-        user_message = data.get("message", "").strip()
-        history      = data.get("history", [])  # prior conversation turns
-
-        if not user_message:
-            return JsonResponse({"error": "Empty message"}, status=400)
-
-        # ── Detect emotion from the latest message ──
-        predictor        = get_text_predictor()
-        result           = predictor.predict(user_message)
-        detected_emotion = result.get("emotion", "neutral")
-
-        # ── Save to DB (text entry, no image) ──
-        EmotionResult.objects.create(
-            user=request.user,
-            text_input=user_message,
-            emotion=detected_emotion,
-            prediction_type="text",
-            text_confidence=float(result.get("confidence", 0)) * 100,
-        )
-
-        # ── Build Claude reply ──
-        client = anthropic.Anthropic(api_key=getattr(settings, "ANTHROPIC_API_KEY", None))
-
-        system_prompt = f"""You are a warm, emotionally intelligent companion on the Emotion Aware platform.
-The user's latest detected emotion is: {detected_emotion}.
-
-Your guidelines:
-- Be genuinely empathetic, not clinical or scripted.
-- Acknowledge the emotion naturally — never announce it robotically (don't say "I detect that you're feeling X").
-- Respond in 2–5 sentences unless the user needs more.
-- If the emotion is positive, match their energy warmly.
-- If negative, be validating and gentle — never dismissive.
-- You may ask ONE thoughtful follow-up question to keep the dialogue going.
-- If the user seems in genuine distress, gently suggest professional support without being preachy.
-- Never break character or mention you are an AI unless the user directly asks."""
-
-        messages_payload = list(history) + [{"role": "user", "content": user_message}]
-
-        response = client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=400,
-            system=system_prompt,
-            messages=messages_payload,
-        )
-
-        reply = response.content[0].text
-
-        return JsonResponse({"emotion": detected_emotion, "reply": reply})
-
-    except anthropic.APIError as e:
-        # Graceful fallback — app never crashes
-        fallbacks = {
-            "sadness": "I hear you — it sounds like things feel heavy right now. I'm here. Would you like to share more?",
-            "joy":     "That's wonderful to hear! What's been making you feel so good?",
-            "anger":   "It sounds like something really got to you. Taking a breath can help — do you want to talk it through?",
-            "fear":    "Feeling scared is completely valid. You're not alone in this. What's been worrying you?",
-            "love":    "That's a beautiful feeling. What's been making your heart full lately?",
-            "surprise":"Wow, sounds like something unexpected happened! Tell me more.",
-            "disgust": "That sounds really unpleasant. I'm sorry you had to deal with that.",
-        }
-        emotion = detected_emotion if 'detected_emotion' in dir() else "neutral"
-        reply   = fallbacks.get(emotion, "I'm here and listening. Tell me more about how you're feeling.")
-        return JsonResponse({"emotion": emotion, "reply": reply})
-
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
