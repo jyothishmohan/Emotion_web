@@ -1,30 +1,296 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Welcome - Emotion Aware</title>
+    <meta charset="UTF-8">
+    <title>Emotion Aware — Multimodal Emotion Intelligence</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --brand-accent: #7c6fff;
+            --brand-accent2: #ff6b9d;
+            --brand-muted: rgba(255,255,255,0.45);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #0d0d14;
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Subtle grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(124,111,255,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(124,111,255,0.04) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+        }
+
+        /* Orb glows */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            animation: drift 8s ease-in-out infinite alternate;
+        }
+
+        .orb-1 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(124,111,255,0.25), transparent 70%);
+            top: -100px; left: -100px;
+        }
+
+        .orb-2 {
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(255,107,157,0.2), transparent 70%);
+            bottom: -50px; right: -50px;
+            animation-delay: -4s;
+        }
+
+        @keyframes drift {
+            from { transform: translate(0, 0); }
+            to { transform: translate(30px, 20px); }
+        }
+
+        /* Hero */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(124,111,255,0.12);
+            border: 1px solid rgba(124,111,255,0.25);
+            color: rgba(180,170,255,0.9);
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            padding: 6px 16px;
+            border-radius: 99px;
+            margin-bottom: 32px;
+            animation: fade-up 0.6s ease both;
+        }
+
+        .badge-pill .dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--brand-accent);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        h1 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: clamp(44px, 8vw, 80px);
+            line-height: 1.05;
+            letter-spacing: -2px;
+            margin-bottom: 24px;
+            animation: fade-up 0.6s 0.1s ease both;
+        }
+
+        h1 .gradient-text {
+            background: linear-gradient(135deg, var(--brand-accent), var(--brand-accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: var(--brand-muted);
+            max-width: 480px;
+            line-height: 1.6;
+            margin-bottom: 48px;
+            animation: fade-up 0.6s 0.2s ease both;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+            animation: fade-up 0.6s 0.3s ease both;
+        }
+
+        .btn-primary-cta {
+            background: var(--brand-accent);
+            color: white;
+            font-size: 15px;
+            font-weight: 500;
+            padding: 14px 32px;
+            border-radius: 12px;
+            text-decoration: none;
+            border: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary-cta:hover {
+            background: #6a5ee8;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary-cta {
+            background: rgba(255,255,255,0.06);
+            color: white;
+            font-size: 15px;
+            font-weight: 500;
+            padding: 14px 32px;
+            border-radius: 12px;
+            text-decoration: none;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.2s;
+        }
+
+        .btn-secondary-cta:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        /* Feature pills */
+        .features {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 56px;
+            animation: fade-up 0.6s 0.4s ease both;
+        }
+
+        .feature-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 10px;
+            padding: 10px 18px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .feature-pill .icon {
+            font-size: 16px;
+        }
+
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Nav strip */
+        .top-nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 10;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 18px;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--brand-accent);
+            box-shadow: 0 0 8px var(--brand-accent);
+        }
+    </style>
 </head>
+<body>
 
-<body style="background: linear-gradient(120deg, #1f1c2c, #928dab);">
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
 
-<div class="container vh-100 d-flex justify-content-center align-items-center">
-    <div class="text-center text-white animate__animated animate__fadeInDown">
+<nav class="top-nav">
+    <a class="brand" href="#">
+        <span class="brand-dot"></span>
+        Emotion Aware
+    </a>
+</nav>
 
-        <h1 class="mb-4">Emotion Aware</h1>
-        <p class="mb-4">Face + Text Emotion Detection Platform</p>
-
-        <a href="{% url 'login' %}" class="btn btn-light btn-lg me-3 animated-btn">
-            Login
-        </a>
-
-        <a href="{% url 'register' %}" class="btn btn-warning btn-lg animated-btn">
-            Register
-        </a>
-
+<section class="hero">
+    <div class="badge-pill">
+        <span class="dot"></span>
+        Multimodal AI Platform
     </div>
-</div>
+
+    <h1>
+        Read Emotions,<br>
+        <span class="gradient-text">Understand People</span>
+    </h1>
+
+    <p class="subtitle">
+        Advanced emotion detection from faces, text, and combined signals. Built for researchers, developers, and creators.
+    </p>
+
+    <div class="cta-group">
+        <a href="{% url 'register' %}" class="btn-primary-cta">
+            Get Started
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="{% url 'login' %}" class="btn-secondary-cta">Sign In</a>
+    </div>
+
+    <div class="features">
+        <div class="feature-pill">
+            <span class="icon">👁</span>
+            Face Detection
+        </div>
+        <div class="feature-pill">
+            <span class="icon">💬</span>
+            Text Analysis
+        </div>
+        <div class="feature-pill">
+            <span class="icon">🔀</span>
+            Multimodal Fusion
+        </div>
+        <div class="feature-pill">
+            <span class="icon">📊</span>
+            Live Dashboard
+        </div>
+    </div>
+</section>
 
 </body>
 </html>

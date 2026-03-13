@@ -1,132 +1,290 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <meta charset="UTF-8">
-    <title>Emotion Aware System</title>
+    <title>{% block title %}Emotion Aware{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <!-- Bootstrap 5 CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 
     <style>
-        body {
-            background-color: #f4f6f9;
+        :root {
+            --brand-dark: #0d0d14;
+            --brand-mid: #13131f;
+            --brand-surface: #1a1a2e;
+            --brand-border: rgba(255,255,255,0.07);
+            --brand-accent: #7c6fff;
+            --brand-accent-soft: rgba(124,111,255,0.15);
+            --brand-accent2: #ff6b9d;
+            --brand-text: #e8e6f0;
+            --brand-muted: #7a7893;
+            --brand-success: #4ade80;
+            --brand-warning: #fbbf24;
+            --brand-info: #38bdf8;
+            --nav-h: 64px;
         }
 
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: var(--brand-dark);
+            color: var(--brand-text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── NAVBAR ── */
         .navbar {
-            background: linear-gradient(90deg, #1f1c2c, #928dab);
+            height: var(--nav-h);
+            background: rgba(13,13,20,0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--brand-border);
+            position: sticky;
+            top: 0;
+            z-index: 999;
         }
 
         .navbar-brand {
-            font-weight: bold;
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
             font-size: 20px;
+            letter-spacing: -0.5px;
+            color: white !important;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar-brand .logo-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--brand-accent);
+            display: inline-block;
+            box-shadow: 0 0 10px var(--brand-accent);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(0.8); }
         }
 
         .nav-link {
-            color: white !important;
+            color: var(--brand-muted) !important;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 6px 14px !important;
+            border-radius: 8px;
+            transition: color 0.2s, background 0.2s;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--brand-text) !important;
+            background: var(--brand-accent-soft);
+        }
+
+        .navbar-toggler {
+            border: 1px solid var(--brand-border);
+            padding: 4px 8px;
+        }
+
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath stroke='rgba%28255,255,255,0.7%29' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+        }
+
+        .welcome-text {
+            font-size: 13px;
+            color: var(--brand-muted);
+        }
+
+        .welcome-text span {
+            color: var(--brand-accent);
             font-weight: 500;
         }
 
-        .nav-link:hover {
-            color: #ffd369 !important;
+        /* ── BUTTONS ── */
+        .btn-auth {
+            font-size: 13px;
+            font-weight: 500;
+            padding: 7px 18px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            border: 1px solid var(--brand-border);
         }
 
-        .navbar-text {
-            color: white !important;
+        .btn-logout {
+            background: rgba(255,107,157,0.1);
+            color: var(--brand-accent2);
+            border-color: rgba(255,107,157,0.3);
         }
 
-        .content-wrapper {
-            margin-top: 30px;
+        .btn-logout:hover {
+            background: rgba(255,107,157,0.2);
+            color: var(--brand-accent2);
         }
 
-        footer {
-            margin-top: 50px;
-            padding: 15px;
-            background-color: #1f1c2c;
+        .btn-login {
+            background: rgba(255,255,255,0.05);
+            color: var(--brand-text);
+        }
+
+        .btn-login:hover {
+            background: rgba(255,255,255,0.1);
             color: white;
-            text-align: center;
         }
+
+        .btn-register {
+            background: var(--brand-accent);
+            color: white;
+            border-color: var(--brand-accent);
+        }
+
+        .btn-register:hover {
+            background: #6a5ee8;
+            color: white;
+        }
+
+        /* ── CONTENT ── */
+        .content-wrapper {
+            flex: 1;
+            padding: 40px 0;
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            padding: 20px;
+            border-top: 1px solid var(--brand-border);
+            text-align: center;
+            font-size: 13px;
+            color: var(--brand-muted);
+        }
+
+        /* ── GLOBAL CARD STYLE ── */
+        .ea-card {
+            background: var(--brand-mid);
+            border: 1px solid var(--brand-border);
+            border-radius: 16px;
+            padding: 28px;
+        }
+
+        /* ── ALERTS ── */
+        .alert-success {
+            background: rgba(74,222,128,0.08);
+            border: 1px solid rgba(74,222,128,0.2);
+            color: #86efac;
+            border-radius: 12px;
+        }
+
+        .alert-danger {
+            background: rgba(255,107,157,0.08);
+            border: 1px solid rgba(255,107,157,0.2);
+            color: #fca5a5;
+            border-radius: 12px;
+        }
+
+        /* ── PROGRESS BAR ── */
+        .progress {
+            background: rgba(255,255,255,0.05);
+            border-radius: 99px;
+            height: 10px;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, var(--brand-accent), var(--brand-accent2));
+            border-radius: 99px;
+        }
+
+        /* ── FORM CONTROLS ── */
+        .form-control, .form-select {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--brand-border);
+            color: var(--brand-text);
+            border-radius: 10px;
+            padding: 11px 14px;
+            font-size: 14px;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background: rgba(124,111,255,0.06);
+            border-color: rgba(124,111,255,0.5);
+            box-shadow: 0 0 0 3px rgba(124,111,255,0.1);
+            color: var(--brand-text);
+            outline: none;
+        }
+
+        .form-control::placeholder { color: var(--brand-muted); }
+
+        /* ── SCROLLBAR ── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--brand-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--brand-surface); border-radius: 99px; }
     </style>
+
+    {% block extra_head %}{% endblock %}
 </head>
 
 <body>
 
-<!-- 🔷 NAVBAR -->
-<nav class="navbar navbar-expand-lg navbar-dark">
-    <div class="container-fluid">
-
-        <!-- Logo -->
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg">
+    <div class="container">
         <a class="navbar-brand" href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'login' %}{% endif %}">
+            <span class="logo-dot"></span>
             Emotion Aware
         </a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarContent">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
             <span class="navbar-toggler-icon"></span>
         </button>
 
         <div class="collapse navbar-collapse" id="navbarContent">
-
-            <!-- LEFT SIDE MENU -->
-            <ul class="navbar-nav me-auto">
-
+            <ul class="navbar-nav me-auto gap-1 ms-3">
                 {% if user.is_authenticated %}
-                
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
                     </li>
-
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'index' %}">Face</a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}" href="{% url 'index' %}">Face</a>
                     </li>
-
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'text_predict' %}">Text</a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'text_predict' %}active{% endif %}" href="{% url 'text_predict' %}">Text</a>
                     </li>
-
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'multimodal_predict' %}">Multimodal</a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'multimodal_predict' %}active{% endif %}" href="{% url 'multimodal_predict' %}">Multimodal</a>
                     </li>
-
                 {% endif %}
-
             </ul>
 
-            <!-- RIGHT SIDE AUTH -->
-            <div class="d-flex align-items-center">
-
+            <div class="d-flex align-items-center gap-2">
                 {% if user.is_authenticated %}
-                    <span class="navbar-text me-3">
-                        Welcome, {{ user.username }}
-                    </span>
-                    <a href="{% url 'logout' %}" class="btn btn-danger btn-sm">Logout</a>
-
+                    <span class="welcome-text">Hello, <span>{{ user.username }}</span></span>
+                    <a href="{% url 'logout' %}" class="btn btn-auth btn-logout">Logout</a>
                 {% else %}
-                    <a href="{% url 'login' %}" class="btn btn-light btn-sm me-2">Login</a>
-                    <a href="{% url 'register' %}" class="btn btn-warning btn-sm">Register</a>
+                    <a href="{% url 'login' %}" class="btn btn-auth btn-login">Login</a>
+                    <a href="{% url 'register' %}" class="btn btn-auth btn-register">Register</a>
                 {% endif %}
-
             </div>
-
         </div>
     </div>
 </nav>
 
-<!-- 🔷 MAIN CONTENT -->
-<div class="container content-wrapper">
-    {% block content %}
-    {% endblock %}
+<!-- MAIN CONTENT -->
+<div class="content-wrapper">
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
 </div>
 
-<!-- 🔷 FOOTER -->
+<!-- FOOTER -->
 <footer>
-    Emotion Aware Multimodal System © {{ now|date:"Y" }}
+    Emotion Aware &copy; {{ now|date:"Y" }} &mdash; Multimodal Emotion Intelligence
 </footer>
 
-<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
+{% block extra_scripts %}{% endblock %}
 </body>
 </html>

@@ -1,38 +1,284 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Login - Emotion Aware</title>
     <meta charset="UTF-8">
+    <title>Login — Emotion Aware</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #7c6fff;
+            --accent2: #ff6b9d;
+            --dark: #0d0d14;
+            --surface: #13131f;
+            --border: rgba(255,255,255,0.07);
+            --muted: rgba(255,255,255,0.4);
+            --text: #e8e6f0;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--dark);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(124,111,255,0.035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(124,111,255,0.035) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+        }
+
+        .orb-1 {
+            width: 350px; height: 350px;
+            background: radial-gradient(circle, rgba(124,111,255,0.2), transparent 70%);
+            top: -80px; left: -80px;
+        }
+
+        .orb-2 {
+            width: 250px; height: 250px;
+            background: radial-gradient(circle, rgba(255,107,157,0.15), transparent 70%);
+            bottom: -60px; right: -60px;
+        }
+
+        .card {
+            position: relative;
+            z-index: 1;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 44px 40px;
+            width: 100%;
+            max-width: 420px;
+            animation: slide-up 0.4s ease both;
+        }
+
+        @keyframes slide-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-header-area {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+
+        .logo-mark {
+            width: 48px; height: 48px;
+            border-radius: 14px;
+            background: rgba(124,111,255,0.15);
+            border: 1px solid rgba(124,111,255,0.3);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .logo-dot {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 12px var(--accent);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 6px var(--accent); }
+            to { box-shadow: 0 0 18px var(--accent); }
+        }
+
+        h2 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 26px;
+            letter-spacing: -0.5px;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 15px;
+            font-family: 'DM Sans', sans-serif;
+            outline: none;
+            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus {
+            border-color: rgba(124,111,255,0.5);
+            background: rgba(124,111,255,0.06);
+            box-shadow: 0 0 0 3px rgba(124,111,255,0.1);
+        }
+
+        input::placeholder { color: rgba(255,255,255,0.25); }
+
+        .btn-submit {
+            width: 100%;
+            background: var(--accent);
+            color: white;
+            font-size: 15px;
+            font-weight: 500;
+            font-family: 'DM Sans', sans-serif;
+            padding: 13px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .btn-submit:hover { background: #6a5ee8; }
+        .btn-submit:active { transform: scale(0.99); }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 24px 0;
+            color: rgba(255,255,255,0.15);
+            font-size: 12px;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .footer-link {
+            text-align: center;
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .footer-link a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer-link a:hover { text-decoration: underline; }
+
+        .back-home {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            font-size: 13px;
+            color: var(--muted);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+            z-index: 10;
+        }
+
+        .back-home:hover { color: var(--text); }
+
+        .messages {
+            margin-bottom: 16px;
+        }
+
+        .msg-error {
+            background: rgba(255,107,157,0.1);
+            border: 1px solid rgba(255,107,157,0.25);
+            color: #fca5a5;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+    </style>
 </head>
+<body>
 
-<body style="background: linear-gradient(120deg, #1f1c2c, #928dab);">
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
 
-<div class="container vh-100 d-flex justify-content-center align-items-center">
-    <div class="card shadow p-4" style="width: 400px;">
-        <h3 class="text-center mb-4">Login</h3>
+<a href="{% url 'login' %}" class="back-home">
+    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Back
+</a>
 
-        <form method="POST">
-            {% csrf_token %}
-
-            <div class="mb-3">
-                <input type="text" name="username" class="form-control" placeholder="Username" required>
-            </div>
-
-            <div class="mb-3">
-                <input type="password" name="password" class="form-control" placeholder="Password" required>
-            </div>
-
-            <button class="btn btn-primary w-100">Login</button>
-        </form>
-
-        <p class="mt-3 text-center">
-            Don't have an account?
-            <a href="{% url 'register' %}">Create Account</a>
-        </p>
+<div class="card">
+    <div class="card-header-area">
+        <div class="logo-mark">
+            <div class="logo-dot"></div>
+        </div>
+        <h2>Welcome back</h2>
+        <p class="subtitle">Sign in to your Emotion Aware account</p>
     </div>
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="msg-error">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" placeholder="Enter your username" required autocomplete="username">
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Enter your password" required autocomplete="current-password">
+        </div>
+
+        <button type="submit" class="btn-submit">Sign In</button>
+    </form>
+
+    <div class="divider">or</div>
+
+    <p class="footer-link">
+        Don't have an account? <a href="{% url 'register' %}">Create one</a>
+    </p>
 </div>
 
 </body>

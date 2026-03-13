@@ -1,0 +1,860 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat — Emotion Aware{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Override content wrapper padding for full-height chat */
+    .content-wrapper {
+        padding: 0 !important;
+    }
+
+    .content-wrapper > .container {
+        max-width: 100% !important;
+        padding: 0 !important;
+    }
+
+    /* ── FULL PAGE CHAT LAYOUT ── */
+    .chat-page {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        height: calc(100vh - 64px);
+        overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+        background: var(--brand-mid);
+        border-right: 1px solid var(--brand-border);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .sidebar-header {
+        padding: 20px 18px 16px;
+        border-bottom: 1px solid var(--brand-border);
+        flex-shrink: 0;
+    }
+
+    .sidebar-title {
+        font-family: 'Syne', sans-serif;
+        font-weight: 700;
+        font-size: 16px;
+        color: #e8e6f0;
+        margin-bottom: 12px;
+    }
+
+    .btn-new-chat {
+        width: 100%;
+        padding: 10px 14px;
+        font-size: 13px;
+        font-weight: 500;
+        font-family: 'DM Sans', sans-serif;
+        border-radius: 10px;
+        border: 1px dashed rgba(124,111,255,0.35);
+        background: rgba(124,111,255,0.06);
+        color: rgba(180,170,255,0.8);
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+    }
+
+    .btn-new-chat:hover {
+        background: rgba(124,111,255,0.14);
+        border-color: rgba(124,111,255,0.55);
+        color: #c4baff;
+    }
+
+    /* Emotion tracker */
+    .emotion-tracker {
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--brand-border);
+        flex-shrink: 0;
+    }
+
+    .tracker-label {
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--brand-muted);
+        margin-bottom: 12px;
+    }
+
+    .emotion-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .emotion-pill {
+        font-size: 11px;
+        font-weight: 500;
+        padding: 4px 10px;
+        border-radius: 99px;
+        border: 1px solid transparent;
+        transition: all 0.3s;
+        opacity: 0.35;
+    }
+
+    .emotion-pill.active { opacity: 1; }
+
+    .emotion-pill.joy     { background: rgba(251,191,36,0.12);  border-color: rgba(251,191,36,0.3);  color: #fde68a; }
+    .emotion-pill.sadness { background: rgba(56,189,248,0.12);  border-color: rgba(56,189,248,0.3);  color: #7dd3fc; }
+    .emotion-pill.anger   { background: rgba(248,113,113,0.12); border-color: rgba(248,113,113,0.3); color: #fca5a5; }
+    .emotion-pill.fear    { background: rgba(167,139,250,0.12); border-color: rgba(167,139,250,0.3); color: #c4b5fd; }
+    .emotion-pill.love    { background: rgba(255,107,157,0.12); border-color: rgba(255,107,157,0.3); color: #ffaac8; }
+    .emotion-pill.neutral { background: rgba(148,163,184,0.12); border-color: rgba(148,163,184,0.3); color: #cbd5e1; }
+    .emotion-pill.surprise{ background: rgba(52,211,153,0.12);  border-color: rgba(52,211,153,0.3);  color: #6ee7b7; }
+    .emotion-pill.disgust { background: rgba(163,230,53,0.12);  border-color: rgba(163,230,53,0.3);  color: #bef264; }
+
+    /* Tips */
+    .sidebar-tips {
+        padding: 16px 18px;
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .tips-label {
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--brand-muted);
+        margin-bottom: 10px;
+    }
+
+    .tip-item {
+        font-size: 12px;
+        color: rgba(255,255,255,0.3);
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        line-height: 1.5;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .tip-item:hover { color: rgba(255,255,255,0.55); }
+    .tip-item:last-child { border-bottom: none; }
+
+    .tip-item span {
+        display: inline-block;
+        margin-right: 6px;
+        font-size: 13px;
+    }
+
+    /* Session mood summary */
+    .mood-summary {
+        padding: 14px 18px;
+        border-top: 1px solid var(--brand-border);
+        flex-shrink: 0;
+    }
+
+    .mood-label {
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--brand-muted);
+        margin-bottom: 8px;
+    }
+
+    .mood-value {
+        font-family: 'Syne', sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        color: #b4aaff;
+        min-height: 26px;
+        transition: all 0.3s;
+    }
+
+    .mood-count {
+        font-size: 11px;
+        color: rgba(255,255,255,0.25);
+        margin-top: 2px;
+    }
+
+    /* ── MAIN CHAT AREA ── */
+    .chat-main {
+        display: flex;
+        flex-direction: column;
+        background: var(--brand-dark);
+        overflow: hidden;
+    }
+
+    .chat-topbar {
+        padding: 0 24px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--brand-border);
+        flex-shrink: 0;
+    }
+
+    .topbar-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .ai-avatar {
+        width: 34px; height: 34px;
+        border-radius: 50%;
+        background: rgba(124,111,255,0.15);
+        border: 1px solid rgba(124,111,255,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .ai-avatar-dot {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: var(--brand-accent);
+        animation: glow-pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes glow-pulse {
+        0%, 100% { box-shadow: 0 0 4px var(--brand-accent); }
+        50% { box-shadow: 0 0 10px var(--brand-accent); }
+    }
+
+    .online-badge {
+        position: absolute;
+        bottom: 0; right: 0;
+        width: 9px; height: 9px;
+        border-radius: 50%;
+        background: #4ade80;
+        border: 2px solid var(--brand-dark);
+    }
+
+    .topbar-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: #e8e6f0;
+    }
+
+    .topbar-status {
+        font-size: 11px;
+        color: #4ade80;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .topbar-status::before {
+        content: '';
+        width: 5px; height: 5px;
+        border-radius: 50%;
+        background: #4ade80;
+        display: inline-block;
+    }
+
+    .btn-clear {
+        font-size: 12px;
+        color: var(--brand-muted);
+        background: none;
+        border: 1px solid var(--brand-border);
+        border-radius: 8px;
+        padding: 6px 12px;
+        cursor: pointer;
+        font-family: 'DM Sans', sans-serif;
+        transition: all 0.2s;
+    }
+
+    .btn-clear:hover { color: #fca5a5; border-color: rgba(252,165,165,0.3); }
+
+    /* ── MESSAGES ── */
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 28px 28px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        scroll-behavior: smooth;
+    }
+
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-track { background: transparent; }
+    .chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius: 99px; }
+
+    /* Welcome state */
+    .welcome-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        text-align: center;
+        padding: 40px 20px;
+        gap: 16px;
+    }
+
+    .welcome-icon {
+        width: 64px; height: 64px;
+        border-radius: 20px;
+        background: rgba(124,111,255,0.1);
+        border: 1px solid rgba(124,111,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 4px;
+    }
+
+    .welcome-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 22px;
+        font-weight: 700;
+        color: #e8e6f0;
+    }
+
+    .welcome-sub {
+        font-size: 14px;
+        color: rgba(255,255,255,0.35);
+        max-width: 340px;
+        line-height: 1.6;
+    }
+
+    .starter-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        margin-top: 8px;
+    }
+
+    .starter-chip {
+        font-size: 13px;
+        color: rgba(180,170,255,0.75);
+        background: rgba(124,111,255,0.08);
+        border: 1px solid rgba(124,111,255,0.2);
+        border-radius: 99px;
+        padding: 8px 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    .starter-chip:hover {
+        background: rgba(124,111,255,0.16);
+        color: #c4baff;
+    }
+
+    /* Message rows */
+    .msg-row {
+        display: flex;
+        gap: 12px;
+        max-width: 720px;
+        animation: msg-in 0.22s ease;
+    }
+
+    @keyframes msg-in {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg-row.user {
+        flex-direction: row-reverse;
+        align-self: flex-end;
+    }
+
+    .msg-row.bot {
+        align-self: flex-start;
+    }
+
+    .msg-avatar {
+        width: 30px; height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 600;
+        flex-shrink: 0;
+        margin-top: 4px;
+    }
+
+    .msg-row.bot .msg-avatar {
+        background: rgba(124,111,255,0.15);
+        color: #b4aaff;
+        border: 1px solid rgba(124,111,255,0.25);
+    }
+
+    .msg-row.user .msg-avatar {
+        background: rgba(255,107,157,0.12);
+        color: #ffaac8;
+        border: 1px solid rgba(255,107,157,0.2);
+    }
+
+    .msg-content { display: flex; flex-direction: column; gap: 4px; }
+
+    .msg-emotion-tag {
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        text-transform: capitalize;
+        padding: 2px 9px;
+        border-radius: 99px;
+        width: fit-content;
+        background: rgba(124,111,255,0.12);
+        color: rgba(180,170,255,0.65);
+        border: 1px solid rgba(124,111,255,0.2);
+    }
+
+    .msg-bubble {
+        padding: 12px 16px;
+        border-radius: 16px;
+        font-size: 14px;
+        line-height: 1.65;
+        max-width: 560px;
+    }
+
+    .msg-row.bot .msg-bubble {
+        background: rgba(255,255,255,0.055);
+        border: 1px solid rgba(255,255,255,0.07);
+        color: #d8d4ee;
+        border-bottom-left-radius: 4px;
+    }
+
+    .msg-row.user .msg-bubble {
+        background: rgba(124,111,255,0.2);
+        border: 1px solid rgba(124,111,255,0.28);
+        color: #e8e4ff;
+        border-bottom-right-radius: 4px;
+    }
+
+    .msg-time {
+        font-size: 10px;
+        color: rgba(255,255,255,0.18);
+        padding: 0 4px;
+    }
+
+    .msg-row.user .msg-time { text-align: right; }
+
+    /* Typing indicator */
+    .typing-row {
+        display: none;
+        align-items: center;
+        gap: 12px;
+        align-self: flex-start;
+    }
+
+    .typing-row.visible { display: flex; }
+
+    .typing-bubble {
+        background: rgba(255,255,255,0.055);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 16px;
+        border-bottom-left-radius: 4px;
+        padding: 14px 18px;
+        display: flex;
+        gap: 5px;
+        align-items: center;
+    }
+
+    .typing-bubble span {
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        background: rgba(180,170,255,0.45);
+        animation: bounce 1.3s ease infinite;
+    }
+
+    .typing-bubble span:nth-child(2) { animation-delay: 0.18s; }
+    .typing-bubble span:nth-child(3) { animation-delay: 0.36s; }
+
+    @keyframes bounce {
+        0%, 60%, 100% { transform: translateY(0); opacity: 0.35; }
+        30% { transform: translateY(-6px); opacity: 1; }
+    }
+
+    /* ── INPUT AREA ── */
+    .chat-input-area {
+        padding: 16px 24px 20px;
+        flex-shrink: 0;
+        border-top: 1px solid var(--brand-border);
+    }
+
+    .input-row {
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid var(--brand-border);
+        border-radius: 16px;
+        padding: 10px 10px 10px 16px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .input-row:focus-within {
+        border-color: rgba(124,111,255,0.4);
+        box-shadow: 0 0 0 3px rgba(124,111,255,0.07);
+    }
+
+    .chat-textarea {
+        flex: 1;
+        background: none;
+        border: none;
+        color: #e8e6f0;
+        font-size: 14px;
+        font-family: 'DM Sans', sans-serif;
+        resize: none;
+        outline: none;
+        min-height: 22px;
+        max-height: 140px;
+        line-height: 1.55;
+        padding: 2px 0;
+    }
+
+    .chat-textarea::placeholder { color: rgba(255,255,255,0.2); }
+
+    .btn-send {
+        width: 38px; height: 38px;
+        border-radius: 10px;
+        border: none;
+        background: var(--brand-accent);
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s, transform 0.1s;
+        flex-shrink: 0;
+    }
+
+    .btn-send:hover { background: #6a5ee8; }
+    .btn-send:active { transform: scale(0.94); }
+    .btn-send:disabled { background: rgba(124,111,255,0.25); cursor: not-allowed; }
+
+    .input-hint {
+        font-size: 11px;
+        color: rgba(255,255,255,0.15);
+        text-align: center;
+        margin-top: 10px;
+    }
+
+    /* ── MOBILE: hide sidebar ── */
+    @media (max-width: 768px) {
+        .chat-page { grid-template-columns: 1fr; }
+        .sidebar { display: none; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-page">
+
+    <!-- ── SIDEBAR ── -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">Emotion Chat</div>
+            <button class="btn-new-chat" id="newChatBtn">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+                New conversation
+            </button>
+        </div>
+
+        <div class="emotion-tracker">
+            <div class="tracker-label">Emotions detected</div>
+            <div class="emotion-pills" id="emotionPills">
+                <span class="emotion-pill joy"     data-e="joy">Joy</span>
+                <span class="emotion-pill sadness"  data-e="sadness">Sadness</span>
+                <span class="emotion-pill anger"    data-e="anger">Anger</span>
+                <span class="emotion-pill fear"     data-e="fear">Fear</span>
+                <span class="emotion-pill love"     data-e="love">Love</span>
+                <span class="emotion-pill neutral"  data-e="neutral">Neutral</span>
+                <span class="emotion-pill surprise" data-e="surprise">Surprise</span>
+                <span class="emotion-pill disgust"  data-e="disgust">Disgust</span>
+            </div>
+        </div>
+
+        <div class="sidebar-tips">
+            <div class="tips-label">Conversation starters</div>
+            <div class="tip-item" onclick="useStarter(this)"><span>💬</span>I've been feeling really overwhelmed lately…</div>
+            <div class="tip-item" onclick="useStarter(this)"><span>😔</span>I don't know why, but I feel empty today.</div>
+            <div class="tip-item" onclick="useStarter(this)"><span>😤</span>Something happened at work that really upset me.</div>
+            <div class="tip-item" onclick="useStarter(this)"><span>😰</span>I'm anxious about something coming up.</div>
+            <div class="tip-item" onclick="useStarter(this)"><span>🥰</span>I want to share something that made me really happy.</div>
+            <div class="tip-item" onclick="useStarter(this)"><span>😶</span>I feel disconnected from everything right now.</div>
+            <div class="tip-item" onclick="useStarter(this)"><span>😩</span>I'm exhausted and don't know how to recharge.</div>
+        </div>
+
+        <div class="mood-summary">
+            <div class="mood-label">Session mood</div>
+            <div class="mood-value" id="sessionMood">—</div>
+            <div class="mood-count" id="sessionCount"></div>
+        </div>
+    </aside>
+
+    <!-- ── MAIN ── -->
+    <main class="chat-main">
+
+        <div class="chat-topbar">
+            <div class="topbar-left">
+                <div class="ai-avatar">
+                    <div class="ai-avatar-dot"></div>
+                    <div class="online-badge"></div>
+                </div>
+                <div>
+                    <div class="topbar-name">Emotion Companion</div>
+                    <div class="topbar-status">Online — here for you</div>
+                </div>
+            </div>
+            <button class="btn-clear" id="clearBtn">Clear chat</button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+
+            <!-- Welcome state (hidden once chat starts) -->
+            <div class="welcome-state" id="welcomeState">
+                <div class="welcome-icon">
+                    <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="rgba(180,170,255,0.8)" stroke-width="1.5">
+                        <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                    </svg>
+                </div>
+                <div class="welcome-title">How are you feeling?</div>
+                <div class="welcome-sub">This is a safe space. Share whatever is on your mind — I'll listen, understand, and respond with care.</div>
+                <div class="starter-chips">
+                    <span class="starter-chip" onclick="useChip(this)">I'm feeling anxious</span>
+                    <span class="starter-chip" onclick="useChip(this)">Something upset me today</span>
+                    <span class="starter-chip" onclick="useChip(this)">I need someone to talk to</span>
+                    <span class="starter-chip" onclick="useChip(this)">I'm feeling really happy!</span>
+                    <span class="starter-chip" onclick="useChip(this)">I'm overwhelmed with work</span>
+                </div>
+            </div>
+
+            <!-- Typing indicator (always last) -->
+            <div class="typing-row" id="typingRow">
+                <div class="msg-avatar" style="background:rgba(124,111,255,0.15);color:#b4aaff;border:1px solid rgba(124,111,255,0.25);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;margin-top:4px;">AI</div>
+                <div class="typing-bubble">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <div class="input-row">
+                <textarea
+                    class="chat-textarea"
+                    id="chatInput"
+                    placeholder="Share what's on your mind…"
+                    rows="1"></textarea>
+                <button class="btn-send" id="sendBtn">
+                    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="input-hint">Press Enter to send &nbsp;·&nbsp; Shift+Enter for new line</div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+    const chatMessages  = document.getElementById('chatMessages');
+    const chatInput     = document.getElementById('chatInput');
+    const sendBtn       = document.getElementById('sendBtn');
+    const typingRow     = document.getElementById('typingRow');
+    const welcomeState  = document.getElementById('welcomeState');
+    const sessionMood   = document.getElementById('sessionMood');
+    const sessionCount  = document.getElementById('sessionCount');
+    const newChatBtn    = document.getElementById('newChatBtn');
+    const clearBtn      = document.getElementById('clearBtn');
+
+    const USER_INITIAL  = "{{ request.user.username|first|upper }}";
+    const CSRF_TOKEN    = "{{ csrf_token }}";
+    const CHATBOT_URL   = "{% url 'chatbot_free' %}";
+
+    let history     = [];       // [{role, content}, ...]
+    let emotionLog  = [];       // list of detected emotion strings
+    let msgCount    = 0;
+
+    // ── Helpers ───────────────────────────────────────────
+    function now() {
+        return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function scrollBottom() {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function hideWelcome() {
+        if (welcomeState) welcomeState.style.display = 'none';
+    }
+
+    // ── Append bubble ─────────────────────────────────────
+    function appendBubble(role, text, emotion) {
+        hideWelcome();
+
+        const row = document.createElement('div');
+        row.className = `msg-row ${role}`;
+
+        // Avatar
+        const avatar = document.createElement('div');
+        avatar.className = 'msg-avatar';
+        avatar.textContent = role === 'user' ? USER_INITIAL : 'AI';
+
+        // Content wrapper
+        const content = document.createElement('div');
+        content.className = 'msg-content';
+
+        // Emotion tag (bot only)
+        if (role === 'bot' && emotion && emotion !== 'neutral') {
+            const tag = document.createElement('div');
+            tag.className = 'msg-emotion-tag';
+            tag.textContent = emotion;
+            content.appendChild(tag);
+        }
+
+        // Bubble
+        const bubble = document.createElement('div');
+        bubble.className = 'msg-bubble';
+        bubble.textContent = text;
+        content.appendChild(bubble);
+
+        // Time
+        const time = document.createElement('div');
+        time.className = 'msg-time';
+        time.textContent = now();
+        content.appendChild(time);
+
+        row.appendChild(avatar);
+        row.appendChild(content);
+        chatMessages.insertBefore(row, typingRow);
+        scrollBottom();
+
+        msgCount++;
+    }
+
+    // ── Update emotion tracker sidebar ───────────────────
+    function updateEmotionTracker(emotion) {
+        if (!emotion) return;
+        const normalized = emotion.toLowerCase();
+        emotionLog.push(normalized);
+
+        // Light up the pill
+        document.querySelectorAll('.emotion-pill').forEach(p => {
+            if (p.dataset.e === normalized) p.classList.add('active');
+        });
+
+        // Session mood = most frequent emotion
+        const freq = {};
+        emotionLog.forEach(e => freq[e] = (freq[e] || 0) + 1);
+        const dominant = Object.entries(freq).sort((a,b) => b[1]-a[1])[0];
+        if (dominant) {
+            sessionMood.textContent = dominant[0].charAt(0).toUpperCase() + dominant[0].slice(1);
+            sessionCount.textContent = `${emotionLog.length} message${emotionLog.length !== 1 ? 's' : ''} this session`;
+        }
+    }
+
+    // ── Send message ──────────────────────────────────────
+    async function sendMessage(text) {
+        text = (text || chatInput.value).trim();
+        if (!text) return;
+
+        chatInput.value = '';
+        chatInput.style.height = 'auto';
+        sendBtn.disabled = true;
+
+        appendBubble('user', text, null);
+
+        typingRow.classList.add('visible');
+        scrollBottom();
+
+        try {
+            const resp = await fetch(CHATBOT_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRF_TOKEN,
+                },
+                body: JSON.stringify({ message: text, history }),
+            });
+
+            const data = await resp.json();
+            typingRow.classList.remove('visible');
+
+            if (data.error) {
+                appendBubble('bot', 'Sorry, something went wrong. Please try again.', null);
+            } else {
+                appendBubble('bot', data.reply, data.emotion);
+                updateEmotionTracker(data.emotion);
+
+                history.push(
+                    { role: 'user',      content: text },
+                    { role: 'assistant', content: data.reply }
+                );
+                // Keep last 30 turns max
+                if (history.length > 30) history = history.slice(-30);
+            }
+        } catch (err) {
+            typingRow.classList.remove('visible');
+            appendBubble('bot', 'Network error — please check your connection and try again.', null);
+        }
+
+        sendBtn.disabled = false;
+        chatInput.focus();
+    }
+
+    // ── Clear / new chat ──────────────────────────────────
+    function resetChat() {
+        history    = [];
+        emotionLog = [];
+        msgCount   = 0;
+
+        // Remove all bubble rows
+        chatMessages.querySelectorAll('.msg-row:not(.typing-row)').forEach(r => r.remove());
+
+        // Reset sidebar
+        document.querySelectorAll('.emotion-pill').forEach(p => p.classList.remove('active'));
+        sessionMood.textContent  = '—';
+        sessionCount.textContent = '';
+
+        // Show welcome again
+        if (welcomeState) welcomeState.style.display = 'flex';
+        chatInput.focus();
+    }
+
+    newChatBtn.addEventListener('click', resetChat);
+    clearBtn.addEventListener('click', resetChat);
+
+    // ── Starters & chips ─────────────────────────────────
+    window.useStarter = function(el) {
+        const text = el.textContent.replace(/^[\s\S]{1,2}/, '').trim();
+        sendMessage(text);
+    };
+
+    window.useChip = function(el) {
+        sendMessage(el.textContent.trim());
+    };
+
+    // ── Events ────────────────────────────────────────────
+    sendBtn.addEventListener('click', () => sendMessage());
+
+    chatInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    chatInput.addEventListener('input', () => {
+        chatInput.style.height = 'auto';
+        chatInput.style.height = Math.min(chatInput.scrollHeight, 140) + 'px';
+    });
+
+    chatInput.focus();
+})();
+</script>
+{% endblock %}
