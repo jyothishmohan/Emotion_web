@@ -477,3 +477,129 @@ def chatbot_message(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid request"}, status=400)
+
+# ======================================================
+# FREE CHATBOT PAGE + ENDPOINT
+# ======================================================
+
+@login_required
+def chatbot_page(request):
+    return render(request, 'chatbot.html')
+
+
+@login_required
+def chatbot_free(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST only'}, status=405)
+
+    try:
+        data         = json.loads(request.body)
+        user_message = data.get('message', '').strip()
+        history      = data.get('history', [])
+
+        if not user_message:
+            return JsonResponse({'error': 'Empty message'}, status=400)
+
+        predictor        = get_text_predictor()
+        result           = predictor.predict(user_message)
+        detected_emotion = result.get('emotion', 'neutral')
+
+        EmotionResult.objects.create(
+            user=request.user,
+            text_input=user_message,
+            emotion=detected_emotion,
+            prediction_type='text',
+            text_confidence=float(result.get('confidence', 0)) * 100,
+        )
+
+        client = anthropic.Anthropic(api_key=getattr(settings, 'ANTHROPIC_API_KEY', None))
+
+        system_prompt = f"""You are a warm, emotionally intelligent companion on the Emotion Aware platform.
+The user's latest detected emotion is: {detected_emotion}.
+
+Your guidelines:
+- Be genuinely empathetic, not clinical or scripted.
+- Acknowledge the emotion naturally — never announce it robotically.
+- Respond in 2–5 sentences unless the user needs more.
+- If the emotion is positive, match their energy warmly.
+- If negative, be validating and gentle — never dismissive.
+- You may ask ONE thoughtful follow-up question to keep the dialogue going.
+- If the user seems in genuine distress, gently suggest professional support without being preachy.
+- Never break character or mention you are an AI unless the user directly asks."""
+
+        messages_payload = list(history) + [{'role': 'user', 'content': user_message}]
+
+        response = client.messages.create(
+            model='claude-sonnet-4-20250514',
+            max_tokens=400,
+            system=system_prompt,
+            messages=messages_payload,
+        )
+
+        reply = response.content[0].text
+        return JsonResponse({'emotion': detected_emotion, 'reply': reply})
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+# ======================================================
+# LIVE STREAM EMOTION (frame-by-frame AJAX)
+# ======================================================
+
+@login_required
+def live_emotion(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST only'}, status=405)
+
+    try:
+        data       = json.loads(request.body)
+        frame_data = data.get('frame', '')
+
+        if not frame_data:
+            return JsonResponse({'error': 'No frame data'}, status=400)
+
+        # Strip base64 header
+        if ',' in frame_data:
+            frame_data = frame_data.split(',')[1]
+
+        img_bytes = base64.b64decode(frame_data)
+        img_array = np.frombuffer(img_bytes, dtype=np.uint8)
+        frame     = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+
+        if frame is None:
+            return JsonResponse({'error': 'Could not decode frame'}, status=400)
+
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        face_cascade = cv2.CascadeClassifier(
+            cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
+        )
+        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=5)
+
+        if len(faces) == 0:
+            return JsonResponse({'emotion': 'No face', 'confidence': 0.0, 'faces_found': 0})
+
+        # Pick largest face
+        faces = sorted(faces, key=lambda f: f[2] * f[3], reverse=True)
+        (x, y, w, h) = faces[0]
+
+        face_roi = gray[y:y + h, x:x + w]
+        face_roi = cv2.resize(face_roi, (48, 48))
+        face_roi = face_roi / 255.0
+        face_roi = np.expand_dims(face_roi, axis=0)
+        face_roi = np.expand_dims(face_roi, axis=-1)
+
+        model_instance = get_face_model()
+        preds          = model_instance.predict(face_roi, verbose=0)
+        emotion        = face_emotion_labels[np.argmax(preds)]
+        confidence     = float(np.max(preds)) * 100
+
+        return JsonResponse({
+            'emotion':     emotion,
+            'confidence':  round(confidence, 2),
+            'faces_found': len(faces),
+        })
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
